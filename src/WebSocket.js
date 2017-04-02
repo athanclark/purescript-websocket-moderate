@@ -6,7 +6,6 @@ var platformSpecificWS = typeof module !== "undefined" && module.require
 
 
 exports.newWebSocketImpl = function runNewWebSocketImpl (params) {
-  console.log("starting");
   var socket = new platformSpecificWS(params.url, params.protocols);
   var cont = params.continue({ url : socket.url, protocol : socket.protocol });
   var capabilities = {
@@ -36,6 +35,4 @@ exports.newWebSocketImpl = function runNewWebSocketImpl (params) {
   socket.addEventListener("open", function() {
     cont.onopen(capabilities);
   });
-
-  console.log("finished");
 };

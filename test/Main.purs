@@ -8,7 +8,7 @@ import WebSocket (WEBSOCKET, newWebSocket)
 
 main :: forall e. Eff (console :: CONSOLE, ws :: WEBSOCKET, err :: EXCEPTION | e) Unit
 main = do
-  log "mer"
+  log "mer mer mer tests n sturf"
   newWebSocket
     { url: "ws://echo.websocket.org"
     , protocols: []

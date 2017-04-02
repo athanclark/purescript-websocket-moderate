@@ -1,4 +1,10 @@
-module WebSocket where
+module WebSocket
+  ( WEBSOCKET
+  , Capabilities
+  , Environment
+  , Params
+  , newWebSocket
+  ) where
 
 import Prelude
 import Data.Function.Eff (EffFn1, EffFn2, runEffFn1, mkEffFn1, mkEffFn2)
