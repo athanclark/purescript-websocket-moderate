@@ -5,10 +5,11 @@ import WebSocket (WEBSOCKET, Environment)
 import WebSocket as WS
 
 import Data.Maybe (Maybe)
+import Data.Either (Either (..))
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (EXCEPTION, Error)
-import Control.Monad.Aff (Aff, makeAff', runAff, Canceler)
+import Control.Monad.Aff (Aff, makeAff', runAff, Canceler, later, liftEff')
 
 
 
@@ -37,31 +38,36 @@ type Params eff =
 
 newWebSocket :: forall eff
               . Params (ws :: WEBSOCKET | eff)
-             -> Aff (err :: EXCEPTION, ws :: WEBSOCKET | eff) Unit
-newWebSocket params = liftEff $ do
-  let onError :: forall eff. Error -> Eff eff Unit
-      onError _ = pure unit
+             -> Aff (ws :: WEBSOCKET | eff) Unit
+newWebSocket params = do
+  eErrX <- later $ liftEff' $ do
+    let onError :: forall eff. Error -> Eff eff Unit
+        onError _ = pure unit
 
-      onSuccess :: forall eff a. a -> Eff eff Unit
-      onSuccess _ = pure unit
+        onSuccess :: forall eff a. a -> Eff eff Unit
+        onSuccess _ = pure unit
 
-  WS.newWebSocket
-    { url: params.url
-    , protocols: params.protocols
-    , continue: \env -> case params.continue env of
-        {onclose,onerror,onmessage,onopen} ->
-          { onclose: \e -> void $ runAff onError onSuccess $ onclose e
-          , onerror: \e -> void $ runAff onError onSuccess $ onerror e
-          , onmessage: \cs m -> void $ runAff onError onSuccess $ onmessage (toAffCapabilities cs) m
-          , onopen: \cs -> void $ runAff onError onSuccess $ onopen $ toAffCapabilities cs
-          }
-    }
+    WS.newWebSocket
+      { url: params.url
+      , protocols: params.protocols
+      , continue: \env -> case params.continue env of
+          {onclose,onerror,onmessage,onopen} ->
+            { onclose: \e -> void $ runAff onError onSuccess $ later $ onclose e
+            , onerror: \e -> void $ runAff onError onSuccess $ later $ onerror e
+            , onmessage: \cs m -> void $ runAff onError onSuccess $ later $ onmessage (toAffCapabilities cs) m
+            , onopen: \cs -> void $ runAff onError onSuccess $ later $ onopen $ toAffCapabilities cs
+            }
+      }
+
+  case eErrX of
+    Left err -> pure unit
+    Right x -> pure x
 
   where
     toAffCapabilities :: forall eff. WS.Capabilities eff -> Capabilities eff
     toAffCapabilities cs =
-      { send: \m -> liftEff $ cs.send m
-      , close: liftEff cs.close
-      , close': \r -> liftEff $ cs.close' r
-      , getBufferedAmount: liftEff cs.getBufferedAmount
+      { send: \m -> later $ liftEff $ cs.send m
+      , close: later $ liftEff cs.close
+      , close': \r -> later $ liftEff $ cs.close' r
+      , getBufferedAmount: later $ liftEff cs.getBufferedAmount
       }
