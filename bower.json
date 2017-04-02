@@ -21,5 +21,5 @@
     "type": "git",
     "url": "https://github.com/athanclark/purescript-websocket-moderate"
   },
-  "license": "BSD-3-Style"
+  "license": "BSD-3-Clause"
 }
