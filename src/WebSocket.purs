@@ -62,7 +62,7 @@ newWebSocket params =
             }
     }
   where
-    runCapabilitiesImpl :: forall eff. CapabilitiesImpl eff -> Capabilities eff
+    runCapabilitiesImpl :: forall eff1. CapabilitiesImpl eff1 -> Capabilities eff1
     runCapabilitiesImpl cs =
       { send: runEffFn1 cs.send
       , close: cs.close

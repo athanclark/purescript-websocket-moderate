@@ -1,0 +1,11 @@
+{
+    "name": "purescript-websocket-moderate",
+    "set": "psc-0.10.7",
+    "source": "https://github.com/purescript/package-sets.git",
+    "depends": [
+        "exceptions",
+        "nullable",
+        "eff-functions",
+        "prelude"
+    ]
+}
