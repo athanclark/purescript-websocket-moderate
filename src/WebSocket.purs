@@ -6,7 +6,6 @@ import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Maybe (Maybe)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Exception (EXCEPTION)
-import Control.Monad.Eff.Console (CONSOLE,log)
 
 
 
