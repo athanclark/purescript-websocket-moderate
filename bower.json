@@ -1,0 +1,19 @@
+{
+  "name": "purescript-websocket-moderate",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-prelude": "^2.5.0",
+    "purescript-console": "^2.0.0",
+    "purescript-eff-functions": "^2.0.0",
+    "purescript-nullable": "^2.0.0",
+    "purescript-exceptions": "2.0.0"
+  },
+  "devDependencies": {
+    "purescript-psci-support": "^2.0.0"
+  }
+}

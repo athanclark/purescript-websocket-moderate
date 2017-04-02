@@ -1,0 +1,25 @@
+{
+  "name": "purescript-websocket-moderate",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/athanclark/purescript-websocket-moderate.git"
+  },
+  "author": "Athan Clark <athan.clark@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/athanclark/purescript-websocket-moderate/issues"
+  },
+  "homepage": "https://github.com/athanclark/purescript-websocket-moderate#readme",
+  "dependencies": {
+    "ws": "^2.2.2"
+  }
+}
