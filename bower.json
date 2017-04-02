@@ -16,5 +16,10 @@
   },
   "devDependencies": {
     "purescript-psci-support": "^2.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/athanclark/purescript-websocket-moderate"
+  },
+  "license": "BSD-3-Style"
 }
