@@ -11,8 +11,7 @@
     "purescript-console": "^2.0.0",
     "purescript-eff-functions": "^2.0.0",
     "purescript-nullable": "^2.0.0",
-    "purescript-exceptions": "2.0.0",
-    "purescript-aff": "^2.0.3"
+    "purescript-exceptions": "2.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^2.0.0"

@@ -18,11 +18,11 @@ import Control.Monad.Eff.Exception (EXCEPTION)
 foreign import data WEBSOCKET :: !
 
 
-type Capabilities eff =
-  { send              :: String -> Eff eff Unit
-  , close             :: Eff eff Unit
-  , close'            :: { code :: Maybe Int, reason :: Maybe String } -> Eff eff Unit
-  , getBufferedAmount :: Eff eff Int
+type Capabilities m =
+  { send              :: String -> m Unit
+  , close             :: m Unit
+  , close'            :: { code :: Maybe Int, reason :: Maybe String } -> m Unit
+  , getBufferedAmount :: m Int
   }
 
 type Environment =
@@ -30,23 +30,23 @@ type Environment =
   , protocol :: String
   }
 
-type Params eff =
+type Params m =
   { url       :: String
   , protocols :: Array String
   , continue  :: Environment ->
       { onclose   :: { code     :: Int
                      , reason   :: Maybe String
                      , wasClean :: Boolean
-                     } -> Eff eff Unit
-      , onerror   :: String                     -> Eff eff Unit
-      , onmessage :: Capabilities eff -> String -> Eff eff Unit
-      , onopen    :: Capabilities eff -> Eff eff Unit
+                     } -> m Unit
+      , onerror   :: String                   -> m Unit
+      , onmessage :: Capabilities m -> String -> m Unit
+      , onopen    :: Capabilities m           -> m Unit
       }
   }
 
 
 newWebSocket :: forall eff
-              . Params (ws :: WEBSOCKET | eff)
+              . Params (Eff (ws :: WEBSOCKET | eff))
              -> Eff (err :: EXCEPTION, ws :: WEBSOCKET | eff) Unit
 newWebSocket params =
   runEffFn1 newWebSocketImpl
@@ -62,7 +62,7 @@ newWebSocket params =
             }
     }
   where
-    runCapabilitiesImpl :: forall eff1. CapabilitiesImpl eff1 -> Capabilities eff1
+    runCapabilitiesImpl :: forall eff1. CapabilitiesImpl eff1 -> Capabilities (Eff eff1)
     runCapabilitiesImpl cs =
       { send: runEffFn1 cs.send
       , close: cs.close
