@@ -2,13 +2,14 @@ module Test.Main where
 
 import Prelude
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Console (CONSOLE, log, error, errorShow)
 import WebSocket (WEBSOCKET, newWebSocket)
+import WebSocket.Class as WSC
 
-main :: forall e. Eff (console :: CONSOLE, ws :: WEBSOCKET, err :: EXCEPTION, avar :: AVAR | e) Unit
+main :: forall e. Eff (console :: CONSOLE, ws :: WEBSOCKET, err :: EXCEPTION | e) Unit
 main = do
-  log "mer mer mer tests n sturf"
   newWebSocket
     { url: "ws://echo.websocket.org"
     , protocols: []
@@ -26,6 +27,25 @@ main = do
             send "yo"
         }
     }
+
+  WSC.newWebSocket id
+    { url: "ws://echo.websocket.org"
+    , protocols: []
+    , continue: \env ->
+        { onclose: \{code,reason,wasClean} -> liftEff $ do
+            log $ "class code: " <> show code
+            log $ "class reason: " <> show reason
+            log $ "class was clean: " <> show wasClean
+        , onerror: \e -> liftEff $ error $ "class error: " <> e
+        , onmessage: \{close} m -> liftEff $ do
+            log $ "class message: " <> m
+            close
+        , onopen: \{send} -> liftEff $ do
+            log "class open"
+            send "class yo"
+        }
+    }
+
 
   -- void $ runAff errorShow (\_ -> log "aff success") $ do
   --   (var :: AVar Int) <- makeVar
