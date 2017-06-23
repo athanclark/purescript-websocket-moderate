@@ -11,7 +11,7 @@ import Control.Monad.Eff.Exception (EXCEPTION)
 
 newWebSocket :: forall eff m resultM
               . MonadEff (ws :: WEBSOCKET | eff) m
-             => MonadEff (err :: EXCEPTION, ws :: WEBSOCKET | eff) resultM
+             => MonadEff (ws :: WEBSOCKET | eff) resultM
              => (forall a. m a -> Eff (ws :: WEBSOCKET | eff) a)
              -> Params m
              -> resultM Unit
