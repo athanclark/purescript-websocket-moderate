@@ -4,33 +4,34 @@ import Prelude
 import WebSocket (WEBSOCKET, Capabilities, Params)
 import WebSocket as WS
 
+import Data.Functor.Singleton (class SingletonFunctor, liftBaseWith_)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
+import Control.Monad.Trans.Control (class MonadBaseControl)
 
 
-newWebSocket :: forall eff m resultM
-              . MonadEff (ws :: WEBSOCKET | eff) m
-             => MonadEff (ws :: WEBSOCKET | eff) resultM
-             => (forall a. m a -> Eff (ws :: WEBSOCKET | eff) a)
-             -> Params m
-             -> resultM Unit
-newWebSocket runM params =
-  liftEff $ WS.newWebSocket
+newWebSocket :: forall eff m stM
+              . MonadBaseControl (Eff (ws :: WEBSOCKET | eff)) m stM
+             => SingletonFunctor stM
+             => Params m
+             -> m Unit
+newWebSocket params =
+  liftBaseWith_ \runInBase -> WS.newWebSocket
     { url: params.url
     , protocols: params.protocols
     , continue: \env ->
         let conts = params.continue env
-        in  { onclose:   \cs   -> runM $ conts.onclose cs
-            , onerror:   \e    -> runM $ conts.onerror e
-            , onmessage: \cs m -> runM $ conts.onmessage (runCapabilities cs) m
-            , onopen:    \cs   -> runM $ conts.onopen $ runCapabilities cs
+        in  { onclose:   \cs   -> runInBase (conts.onclose cs)
+            , onerror:   \e    -> runInBase (conts.onerror e)
+            , onmessage: \cs m -> runInBase (conts.onmessage (runCapabilities cs) m)
+            , onopen:    \cs   -> runInBase (conts.onopen (runCapabilities cs))
             }
     }
   where
     runCapabilities :: Capabilities (Eff (ws :: WEBSOCKET | eff)) -> Capabilities m
     runCapabilities {close,close',send,getBufferedAmount} =
-      { close:             liftEff close
-      , close':            \cs -> liftEff $ close' cs
-      , send:              \m -> liftEff $ send m
-      , getBufferedAmount: liftEff getBufferedAmount
+      { close:             liftBaseWith_ \_ -> close
+      , close':            \cs -> liftBaseWith_ \_ -> close' cs
+      , send:              \m -> liftBaseWith_ \_ -> send m
+      , getBufferedAmount: liftBaseWith_ \_ -> getBufferedAmount
       }
