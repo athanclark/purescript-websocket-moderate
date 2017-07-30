@@ -7,15 +7,15 @@ module WebSocket
   ) where
 
 import Prelude
-import Data.Function.Eff (EffFn1, EffFn2, runEffFn1, mkEffFn1, mkEffFn2)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Maybe (Maybe)
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (kind Effect, Eff)
+import Control.Monad.Eff.Uncurried (EffFn1, EffFn2, runEffFn1, mkEffFn1, mkEffFn2)
 import Control.Monad.Eff.Exception (EXCEPTION)
 
 
 
-foreign import data WEBSOCKET :: !
+foreign import data WEBSOCKET :: Effect
 
 
 type Capabilities m =
