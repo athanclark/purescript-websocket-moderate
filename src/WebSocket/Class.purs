@@ -6,12 +6,11 @@ import WebSocket as WS
 
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (class MonadEff, liftEff)
-import Control.Monad.Eff.Exception (EXCEPTION)
 
 
 newWebSocket :: forall eff m resultM
               . MonadEff (ws :: WEBSOCKET | eff) m
-             => MonadEff (err :: EXCEPTION, ws :: WEBSOCKET | eff) resultM
+             => MonadEff (ws :: WEBSOCKET | eff) resultM
              => (forall a. m a -> Eff (ws :: WEBSOCKET | eff) a)
              -> Params m
              -> resultM Unit
@@ -28,7 +27,7 @@ newWebSocket runM params =
             }
     }
   where
-    runCapabilities :: forall eff1. Capabilities (Eff (ws :: WEBSOCKET | eff)) -> Capabilities m
+    runCapabilities :: Capabilities (Eff (ws :: WEBSOCKET | eff)) -> Capabilities m
     runCapabilities {close,close',send,getBufferedAmount} =
       { close:             liftEff close
       , close':            \cs -> liftEff $ close' cs

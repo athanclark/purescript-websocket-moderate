@@ -47,7 +47,7 @@ type Params m =
 
 newWebSocket :: forall eff
               . Params (Eff (ws :: WEBSOCKET | eff))
-             -> Eff (err :: EXCEPTION, ws :: WEBSOCKET | eff) Unit
+             -> Eff (ws :: WEBSOCKET | eff) Unit
 newWebSocket params =
   runEffFn1 newWebSocketImpl
     { url: params.url
@@ -98,6 +98,6 @@ type ParamsImpl eff =
 
 
 foreign import newWebSocketImpl :: forall eff
-                                . EffFn1 (err :: EXCEPTION, ws :: WEBSOCKET | eff)
+                                . EffFn1 (ws :: WEBSOCKET | eff)
                                     (ParamsImpl (ws :: WEBSOCKET | eff))
                                     Unit
