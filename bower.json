@@ -11,7 +11,7 @@
     "purescript-console": "3.x",
     "purescript-nullable": "3.x",
     "purescript-exceptions": "3.x",
-    "purescript-monad-control": "3.x"
+    "purescript-monad-control": "4.x"
   },
   "devDependencies": {
     "purescript-psci-support": "3.x"
