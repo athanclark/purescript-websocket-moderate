@@ -1,6 +1,5 @@
 module WebSocket
-  ( WEBSOCKET
-  , Capabilities
+  ( Capabilities
   , Environment
   , Params
   , newWebSocket
@@ -9,13 +8,10 @@ module WebSocket
 import Prelude
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Maybe (Maybe)
-import Control.Monad.Eff (kind Effect, Eff)
-import Control.Monad.Eff.Uncurried (EffFn1, EffFn2, runEffFn1, mkEffFn1, mkEffFn2)
-import Control.Monad.Eff.Exception (EXCEPTION)
+import Effect (Effect)
+import Effect.Uncurried (EffectFn1, EffectFn2, runEffectFn1, mkEffectFn1, mkEffectFn2)
 
 
-
-foreign import data WEBSOCKET :: Effect
 
 
 type Capabilities m =
@@ -45,28 +41,27 @@ type Params m =
   }
 
 
-newWebSocket :: forall eff
-              . Params (Eff (ws :: WEBSOCKET | eff))
-             -> Eff (ws :: WEBSOCKET | eff) Unit
+newWebSocket :: Params Effect
+             -> Effect Unit
 newWebSocket params =
-  runEffFn1 newWebSocketImpl
+  runEffectFn1 newWebSocketImpl
     { url: params.url
     , protocols: params.protocols
     , continue: \env ->
         let conts = params.continue env
-        in  { onclose: mkEffFn1 $ \{code,reason,wasClean} -> conts.onclose
+        in  { onclose: mkEffectFn1 $ \{code,reason,wasClean} -> conts.onclose
                 {code, reason: toMaybe reason, wasClean}
-            , onerror: mkEffFn1 conts.onerror
-            , onmessage: mkEffFn2 (conts.onmessage <<< runCapabilitiesImpl)
-            , onopen: mkEffFn1 (conts.onopen <<< runCapabilitiesImpl)
+            , onerror: mkEffectFn1 conts.onerror
+            , onmessage: mkEffectFn2 (conts.onmessage <<< runCapabilitiesImpl)
+            , onopen: mkEffectFn1 (conts.onopen <<< runCapabilitiesImpl)
             }
     }
   where
-    runCapabilitiesImpl :: forall eff1. CapabilitiesImpl eff1 -> Capabilities (Eff eff1)
+    runCapabilitiesImpl :: CapabilitiesImpl -> Capabilities Effect
     runCapabilitiesImpl cs =
-      { send: runEffFn1 cs.send
+      { send: runEffectFn1 cs.send
       , close: cs.close
-      , close': \{code,reason} -> runEffFn1 cs.close' {code: toNullable code, reason: toNullable reason}
+      , close': \{code,reason} -> runEffectFn1 cs.close' {code: toNullable code, reason: toNullable reason}
       , getBufferedAmount: cs.getBufferedAmount
       }
 
@@ -74,30 +69,27 @@ newWebSocket params =
 
 -- * Impl
 
-type CapabilitiesImpl eff =
-  { send              :: EffFn1 eff String Unit
-  , close             :: Eff eff Unit
-  , close'            :: EffFn1 eff { code :: Nullable Int, reason :: Nullable String } Unit
-  , getBufferedAmount :: Eff eff Int
+type CapabilitiesImpl =
+  { send              :: EffectFn1 String Unit
+  , close             :: Effect Unit
+  , close'            :: EffectFn1 { code :: Nullable Int, reason :: Nullable String } Unit
+  , getBufferedAmount :: Effect Int
   }
 
-type ParamsImpl eff =
+type ParamsImpl =
   { url       :: String
   , protocols :: Array String
   , continue  :: Environment ->
-      { onclose   :: EffFn1 eff { code     :: Int
-                                , reason   :: Nullable String
-                                , wasClean :: Boolean
-                                } Unit
-      , onerror   :: EffFn1 eff String Unit
-      , onmessage :: EffFn2 eff (CapabilitiesImpl eff) String Unit
-      , onopen    :: EffFn1 eff (CapabilitiesImpl eff) Unit
+      { onclose   :: EffectFn1 { code     :: Int
+                               , reason   :: Nullable String
+                               , wasClean :: Boolean
+                               } Unit
+      , onerror   :: EffectFn1 String Unit
+      , onmessage :: EffectFn2 CapabilitiesImpl String Unit
+      , onopen    :: EffectFn1 CapabilitiesImpl Unit
       }
   }
 
 
 
-foreign import newWebSocketImpl :: forall eff
-                                . EffFn1 (ws :: WEBSOCKET | eff)
-                                    (ParamsImpl (ws :: WEBSOCKET | eff))
-                                    Unit
+foreign import newWebSocketImpl :: EffectFn1 ParamsImpl Unit

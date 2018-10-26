@@ -1,17 +1,16 @@
 module WebSocket.Class where
 
 import Prelude
-import WebSocket (WEBSOCKET, Capabilities, Params)
+import WebSocket (Capabilities, Params)
 import WebSocket as WS
 
 import Data.Functor.Singleton (class SingletonFunctor, liftBaseWith_)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class (class MonadEff, liftEff)
+import Effect (Effect)
 import Control.Monad.Trans.Control (class MonadBaseControl)
 
 
-newWebSocket :: forall eff m stM
-              . MonadBaseControl (Eff (ws :: WEBSOCKET | eff)) m stM
+newWebSocket :: forall m stM
+              . MonadBaseControl Effect m stM
              => SingletonFunctor stM
              => Params m
              -> m Unit
@@ -28,7 +27,7 @@ newWebSocket params =
             }
     }
   where
-    runCapabilities :: Capabilities (Eff (ws :: WEBSOCKET | eff)) -> Capabilities m
+    runCapabilities :: Capabilities Effect -> Capabilities m
     runCapabilities {close,close',send,getBufferedAmount} =
       { close:             liftBaseWith_ \_ -> close
       , close':            \cs -> liftBaseWith_ \_ -> close' cs

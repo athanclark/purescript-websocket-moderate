@@ -7,14 +7,13 @@
     "output"
   ],
   "dependencies": {
-    "purescript-prelude": "3.x",
-    "purescript-console": "3.x",
-    "purescript-nullable": "3.x",
-    "purescript-exceptions": "3.x",
-    "purescript-monad-control": "4.x"
+    "purescript-prelude": "^4.1.0",
+    "purescript-nullable": "^4.0.0",
+    "purescript-exceptions": "^4.0.0",
+    "purescript-monad-control": "^5.0.0"
   },
   "devDependencies": {
-    "purescript-psci-support": "3.x"
+    "purescript-psci-support": "^4.0.0"
   },
   "repository": {
     "type": "git",
