@@ -10,6 +10,7 @@ import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Maybe (Maybe)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, runEffectFn1, mkEffectFn1, mkEffectFn2)
+import Effect.Exception (Error)
 
 
 
@@ -34,7 +35,7 @@ type Params m =
                      , reason   :: Maybe String
                      , wasClean :: Boolean
                      } -> m Unit
-      , onerror   :: String                   -> m Unit
+      , onerror   :: Error                    -> m Unit
       , onmessage :: Capabilities m -> String -> m Unit
       , onopen    :: Capabilities m           -> m Unit
       }
@@ -84,7 +85,7 @@ type ParamsImpl =
                                , reason   :: Nullable String
                                , wasClean :: Boolean
                                } Unit
-      , onerror   :: EffectFn1 String Unit
+      , onerror   :: EffectFn1 Error Unit
       , onmessage :: EffectFn2 CapabilitiesImpl String Unit
       , onopen    :: EffectFn1 CapabilitiesImpl Unit
       }

@@ -25,7 +25,7 @@ exports.newWebSocketImpl = function runNewWebSocketImpl (params) {
   });
 
   socket.addEventListener("error", function(e) {
-    cont.onerror(JSON.stringify(e));
+    cont.onerror(e);
   });
 
   socket.addEventListener("message", function(e) {
