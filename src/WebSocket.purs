@@ -5,7 +5,7 @@ module WebSocket
   , newWebSocket
   ) where
 
-import Prelude
+import Prelude ((*>), Unit, class Applicative, (<<<), pure, unit, ($), class Semigroup, class Monoid, (=<<))
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Maybe (Maybe)
 import Data.Either (Either (..))

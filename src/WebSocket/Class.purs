@@ -1,8 +1,8 @@
 module WebSocket.Class where
 
-import Prelude
+import Prelude (($), Unit)
 import WebSocket (Capabilities, WebSocketsApp (..))
-import WebSocket as WS
+import WebSocket (newWebSocket) as WS
 
 import Data.Argonaut (class EncodeJson, class DecodeJson)
 import Data.Functor.Singleton (class SingletonFunctor, liftBaseWith_)
