@@ -1,33 +1,37 @@
 module WebSocket.Class where
 
 import Prelude
-import WebSocket (Capabilities, Params)
+import WebSocket (Capabilities, WebSocketsApp (..))
 import WebSocket as WS
 
+import Data.Argonaut (class EncodeJson, class DecodeJson)
 import Data.Functor.Singleton (class SingletonFunctor, liftBaseWith_)
 import Effect (Effect)
 import Control.Monad.Trans.Control (class MonadBaseControl)
 
 
-newWebSocket :: forall m stM
-              . MonadBaseControl Effect m stM
+newWebSocket :: forall m stM send receive
+              . EncodeJson send
+             => DecodeJson receive
+             => MonadBaseControl Effect m stM
              => SingletonFunctor stM
-             => Params m
+             => String -- ^ Url
+             -> Array String -- ^ Protocols
+             -> WebSocketsApp m receive send
              -> m Unit
-newWebSocket params =
+newWebSocket url protocols (WebSocketsApp continue) =
   liftBaseWith_ \runInBase -> WS.newWebSocket
-    { url: params.url
-    , protocols: params.protocols
-    , continue: \env ->
-        let conts = params.continue env
-        in  { onclose:   \cs   -> runInBase (conts.onclose cs)
-            , onerror:   \e    -> runInBase (conts.onerror e)
-            , onmessage: \cs m -> runInBase (conts.onmessage (runCapabilities cs) m)
-            , onopen:    \cs   -> runInBase (conts.onopen (runCapabilities cs))
-            }
-    }
+    url
+    protocols $ WebSocketsApp
+    \env ->
+      let conts = continue env
+      in  { onclose:   \cs   -> runInBase (conts.onclose cs)
+          , onerror:   \e    -> runInBase (conts.onerror e)
+          , onmessage: \cs m -> runInBase (conts.onmessage (runCapabilities cs) m)
+          , onopen:    \cs   -> runInBase (conts.onopen (runCapabilities cs))
+          }
   where
-    runCapabilities :: Capabilities Effect -> Capabilities m
+    runCapabilities :: Capabilities Effect send -> Capabilities m send
     runCapabilities {close,close',send,getBufferedAmount} =
       { close:             liftBaseWith_ \_ -> close
       , close':            \cs -> liftBaseWith_ \_ -> close' cs
