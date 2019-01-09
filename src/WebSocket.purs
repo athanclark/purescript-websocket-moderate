@@ -2,6 +2,8 @@ module WebSocket
   ( Capabilities
   , Environment
   , WebSocketsApp (..)
+  , dimapJson
+  , dimapStringify
   , newWebSocket
   , newWebSocketString
   , newWebSocketBinary
@@ -11,11 +13,11 @@ module WebSocket
   , isBinary
   ) where
 
-import Prelude ((*>), Unit, class Applicative, (<<<), pure, unit, ($), class Semigroup, class Monoid, mempty, (=<<))
+import Prelude ((*>), Unit, class Applicative, (<<<), pure, unit, ($), class Semigroup, class Monoid, mempty)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Maybe (Maybe)
 import Data.Either (Either (..))
-import Data.Argonaut (class EncodeJson, class DecodeJson, encodeJson, decodeJson, jsonParser, stringify)
+import Data.Argonaut (class EncodeJson, class DecodeJson, encodeJson, decodeJson, jsonParser, stringify, Json)
 import Data.Profunctor (class Profunctor, dimap)
 import Data.Generic.Rep (class Generic)
 import Data.ArrayBuffer.Types (ArrayBuffer)
@@ -88,6 +90,32 @@ instance monoidWebSocketsApp :: Applicative m => Monoid (WebSocketsApp m receive
     }
 
 
+dimapJson :: forall m send receive
+           . EncodeJson send
+          => DecodeJson receive
+          => WebSocketsApp m receive send
+          -> WebSocketsApp m Json Json
+dimapJson = dimap fromJson encodeJson
+  where
+    fromJson :: Json -> receive
+    fromJson x = unsafePerformEffect $ case decodeJson x of
+      Right y -> pure y
+      Left e -> throw e
+
+
+
+dimapStringify :: forall m
+                . WebSocketsApp m Json Json
+               -> WebSocketsApp m String String
+dimapStringify = dimap fromJson stringify
+  where
+    fromJson :: String -> Json
+    fromJson x = unsafePerformEffect $ case jsonParser x of
+      Right y -> pure y
+      Left e -> throw e
+
+
+
 -- | Creates a new websocket, where the send and receive types are encoded and decoded as JSON strings
 -- | internally.
 newWebSocket :: forall send receive
@@ -97,14 +125,7 @@ newWebSocket :: forall send receive
              -> Array String -- ^ Protocols
              -> WebSocketsApp Effect receive send
              -> Effect Unit
-newWebSocket url protocols app = newWebSocketString url protocols (dimap fromJSON toJSON app)
-  where
-    toJSON :: send -> String
-    toJSON = stringify <<< encodeJson
-    fromJSON :: String -> receive
-    fromJSON x = unsafePerformEffect $ case decodeJson =<< jsonParser x of
-      Right y -> pure y
-      Left e -> throw e
+newWebSocket url protocols app = newWebSocketString url protocols $ dimapStringify $ dimapJson app
 
 
 -- | Creates a new websocket, where the send and receive types are monomorphically typed as a String.

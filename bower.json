@@ -15,7 +15,8 @@
     "purescript-generics-rep": "^6.1.0",
     "purescript-foreign": "^5.0.0",
     "purescript-web-file": "^1.1.0",
-    "purescript-arraybuffer-types": "^2.0.0"
+    "purescript-arraybuffer": "git://github.com/athanclark/purescript-arraybuffer.git#b066a6c45dcae3c4f59bc5e53075bdbe6e1516bc",
+    "purescript-text-encoding": "^0.0.9"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
