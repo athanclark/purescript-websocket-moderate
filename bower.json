@@ -12,7 +12,10 @@
     "purescript-exceptions": "^4.0.0",
     "purescript-monad-control": "^5.0.0",
     "purescript-argonaut": "^4.0.1",
-    "purescript-generics-rep": "^6.1.0"
+    "purescript-generics-rep": "^6.1.0",
+    "purescript-foreign": "^5.0.0",
+    "purescript-web-file": "^1.1.0",
+    "purescript-arraybuffer-types": "^2.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
