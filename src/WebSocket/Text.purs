@@ -1,3 +1,6 @@
+-- | This module relies on `purescript-text-encoding` and the `text-encoding` NPM module
+-- | for turning a String into an ArrayBuffer and vise-versa.
+
 module WebSocket.Text
   (dimapTextEncoding, dimapTextDecoding, Encoding (..)) where
 
