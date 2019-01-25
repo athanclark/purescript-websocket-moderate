@@ -2,6 +2,8 @@ module WebSocket
   ( Capabilities
   , Environment
   , WebSocketsApp (..)
+  , hoistWebSocketsApp
+  , dimap'
   , dimapJson
   , dimapStringify
   , newWebSocket
@@ -13,21 +15,21 @@ module WebSocket
   , isBinary
   ) where
 
-import Prelude ((*>), Unit, class Applicative, (<<<), pure, unit, ($), class Semigroup, class Monoid, mempty)
+import Prelude ((*>), Unit, class Applicative, (<<<), pure, unit, ($), class Semigroup, class Monoid, mempty, (>>=), class Bind)
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Maybe (Maybe)
 import Data.Either (Either (..))
 import Data.Argonaut (class EncodeJson, class DecodeJson, encodeJson, decodeJson, jsonParser, stringify, Json)
-import Data.Profunctor (class Profunctor, dimap)
+import Data.Profunctor (class Profunctor)
 import Data.Generic.Rep (class Generic)
 import Data.ArrayBuffer.Types (ArrayBuffer)
 import Data.Symbol (SProxy (..), reflectSymbol, class IsSymbol)
 import Web.File.Blob (Blob)
 import Foreign (Foreign)
 import Effect (Effect)
-import Effect.Unsafe (unsafePerformEffect)
 import Effect.Uncurried (EffectFn1, EffectFn2, runEffectFn1, mkEffectFn1, mkEffectFn2)
 import Effect.Exception (Error, throw)
+import Effect.Class (class MonadEffect, liftEffect)
 import Type.Proxy (Proxy (..))
 
 
@@ -90,29 +92,74 @@ instance monoidWebSocketsApp :: Applicative m => Monoid (WebSocketsApp m receive
     }
 
 
+hoistWebSocketsApp :: forall m n s r
+                    . (forall a. m a -> n a)
+                   -> (forall a. n a -> m a)
+                   -> WebSocketsApp m r s
+                   -> WebSocketsApp n r s
+hoistWebSocketsApp to from (WebSocketsApp f) = WebSocketsApp \env ->
+  let {onclose,onerror,onmessage,onopen} = f env
+  in  { onclose: to <<< onclose
+      , onerror: to <<< onerror
+      , onmessage: \cs r -> to (onmessage (mapCapabilities cs) r)
+      , onopen: to <<< onopen <<< mapCapabilities
+      }
+  where
+    mapCapabilities {send,close,close',getBufferedAmount} =
+      { send: from <<< send
+      , close: from close
+      , close': from <<< close'
+      , getBufferedAmount: from getBufferedAmount
+      }
+
+
+dimap' :: forall m send receive send' receive'
+        . Bind m
+       => (receive' -> m receive)
+       -> (send -> send')
+       -> WebSocketsApp m receive send
+       -> WebSocketsApp m receive' send'
+dimap' from to (WebSocketsApp f) = WebSocketsApp \env ->
+  let {onclose,onerror,onmessage,onopen} = f env
+  in  { onclose
+      , onerror
+      , onmessage: \cs r -> from r >>= onmessage (mapCapabilities cs)
+      , onopen: onopen <<< mapCapabilities
+      }
+  where
+    mapCapabilities {send,close,close',getBufferedAmount} =
+      { close
+      , close'
+      , getBufferedAmount
+      , send: send <<< to
+      }
+
+
 dimapJson :: forall m send receive
            . EncodeJson send
           => DecodeJson receive
+          => MonadEffect m
           => WebSocketsApp m receive send
           -> WebSocketsApp m Json Json
-dimapJson = dimap fromJson encodeJson
+dimapJson = dimap' fromJson encodeJson
   where
-    fromJson :: Json -> receive
-    fromJson x = unsafePerformEffect $ case decodeJson x of
+    fromJson :: Json -> m receive
+    fromJson x = case decodeJson x of
       Right y -> pure y
-      Left e -> throw e
+      Left e -> liftEffect (throw e)
 
 
 
 dimapStringify :: forall m
-                . WebSocketsApp m Json Json
+                . MonadEffect m
+               => WebSocketsApp m Json Json
                -> WebSocketsApp m String String
-dimapStringify = dimap fromJson stringify
+dimapStringify = dimap' fromJson stringify
   where
-    fromJson :: String -> Json
-    fromJson x = unsafePerformEffect $ case jsonParser x of
+    fromJson :: String -> m Json
+    fromJson x = case jsonParser x of
       Right y -> pure y
-      Left e -> throw e
+      Left e -> liftEffect (throw e)
 
 
 
