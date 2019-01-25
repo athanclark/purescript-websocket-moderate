@@ -1,30 +1,14 @@
 module WebSocket.PingPong where
 
-import Prelude (bind, pure, ($), (==), (/=))
+import Prelude (class Eq, class Show)
 import Data.Generic.Rep (class Generic)
-import Data.Maybe (Maybe (..))
-import Data.Array (unsafeIndex, length) as Array
-import Data.Argonaut (class EncodeJson, class DecodeJson, encodeJson, decodeJson, fail)
-import Control.Alternative ((<|>))
-import Partial.Unsafe (unsafePartial)
+import Data.Argonaut (class EncodeJson, class DecodeJson)
+import Data.Argonaut.JSONMaybe (JSONMaybe)
 
 -- | Simple type intended to be isomorphic to Haskell's websocket-simple
-newtype PingPong a = PingPong (Maybe a)
-derive instance genericPingPong :: Generic a a' => Generic (PingPong a) _
-instance encodeJsonPingPong :: EncodeJson a => EncodeJson (PingPong a) where
-  encodeJson (PingPong mx) = case mx of
-    Nothing -> encodeJson ""
-    Just x -> encodeJson [x]
-instance decodeJsonPingPong :: DecodeJson a => DecodeJson (PingPong a) where
-  decodeJson json =
-    let str = do
-          s <- decodeJson json
-          if s == ""
-             then pure (PingPong Nothing)
-             else fail "Not a PingPong"
-        arr = do
-          as <- decodeJson json
-          if Array.length as /= 1
-             then fail "Not a PingPong"
-             else pure $ unsafePartial $ PingPong $ Just $ Array.unsafeIndex as 0
-    in  str <|> arr
+newtype PingPong a = PingPong (JSONMaybe a)
+derive instance genericPingPong :: Generic a rep => Generic (PingPong a) _
+derive newtype instance eqPingPing :: (Eq a, Generic a rep) => Eq (PingPong a)
+derive newtype instance showPingPing :: (Show a, Generic a rep) => Show (PingPong a)
+derive newtype instance encodeJsonPingPong :: EncodeJson a => EncodeJson (PingPong a)
+derive newtype instance decodeJsonPingPong :: DecodeJson a => DecodeJson (PingPong a)

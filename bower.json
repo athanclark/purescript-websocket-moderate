@@ -16,7 +16,8 @@
     "purescript-foreign": "^5.0.0",
     "purescript-web-file": "^1.1.0",
     "purescript-arraybuffer": "git://github.com/athanclark/purescript-arraybuffer.git#b066a6c45dcae3c4f59bc5e53075bdbe6e1516bc",
-    "purescript-text-encoding": "^0.0.9"
+    "purescript-text-encoding": "^0.0.9",
+    "purescript-haskell-iso": "^0.0.3"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
@@ -25,5 +26,8 @@
     "type": "git",
     "url": "https://github.com/athanclark/purescript-websocket-moderate"
   },
-  "license": "BSD-3-Clause"
+  "license": "BSD-3-Clause",
+  "resolutions": {
+    "purescript-profunctor-lenses": "^4.0.0"
+  }
 }
