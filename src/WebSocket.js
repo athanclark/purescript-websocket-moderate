@@ -29,6 +29,7 @@ exports.newWebSocketImpl = function runNewWebSocketImpl (params) {
             reason: e.reason,
             wasClean: e.wasClean
         });
+        socket.close(e);
     });
 
     socket.addEventListener("error", function(e) {
@@ -59,4 +60,10 @@ function isBinaryImpl (f) {
 
 
 exports.isBinaryArrayBufferImpl = isBinaryImpl(ArrayBuffer);
-exports.isBinaryBlobImpl = isBinaryImpl(Blob);
+exports.isBinaryBlobImpl = function(d) {
+    if(typeof Blob !== 'undefined') {
+        return isBinaryImpl(Blob)(d);
+    } else {
+        return false;
+    }
+};
