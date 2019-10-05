@@ -6,7 +6,7 @@ module WebSocket.Text
 
 import WebSocket (WebSocketsApp)
 
-import Prelude (($), (<<<), pure)
+import Prelude ((<<<), pure, bind)
 import Data.Either (Either (..))
 import Data.Profunctor (dimap)
 import Data.ArrayBuffer.Typed as TA
@@ -52,6 +52,8 @@ dimapTextDecoding encoding = dimap (TA.buffer <<< TE.encode (toTe encoding)) (wh
 
 
 whole' :: TD.Encoding -> ArrayBuffer -> String
-whole' encoding x = unsafePerformEffect $ case TD.decode encoding (TA.whole x :: Uint8Array) of
-  Left e -> throwException e
-  Right y -> pure y
+whole' encoding x = unsafePerformEffect do
+  (buf :: Uint8Array) <- TA.whole x
+  case TD.decode encoding buf of
+    Left e -> throwException e
+    Right y -> pure y

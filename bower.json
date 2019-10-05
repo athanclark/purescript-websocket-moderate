@@ -7,17 +7,16 @@
     "output"
   ],
   "dependencies": {
-    "purescript-prelude": "^4.1.0",
-    "purescript-nullable": "^4.0.0",
+    "purescript-prelude": "^4.1.1",
+    "purescript-nullable": "^4.1.1",
     "purescript-exceptions": "^4.0.0",
     "purescript-monad-control": "^5.0.0",
-    "purescript-argonaut": "^4.0.1",
-    "purescript-generics-rep": "^6.1.0",
+    "purescript-argonaut": "^6.0.0",
+    "purescript-generics-rep": "^6.1.1",
     "purescript-foreign": "^5.0.0",
-    "purescript-web-file": "^1.1.0",
-    "purescript-arraybuffer": "git://github.com/athanclark/purescript-arraybuffer.git#b066a6c45dcae3c4f59bc5e53075bdbe6e1516bc",
-    "purescript-text-encoding": "^0.0.9",
-    "purescript-haskell-iso": "^0.0.3"
+    "purescript-web-file": "^2.2.0",
+    "purescript-arraybuffer": "git://github.com/athanclark/purescript-arraybuffer.git#9682a2519675296005a906db1da3857b4f93576f",
+    "purescript-text-encoding": "^0.0.9"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
@@ -26,8 +25,5 @@
     "type": "git",
     "url": "https://github.com/athanclark/purescript-websocket-moderate"
   },
-  "license": "BSD-3-Clause",
-  "resolutions": {
-    "purescript-profunctor-lenses": "^4.0.0"
-  }
+  "license": "BSD-3-Clause"
 }
