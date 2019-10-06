@@ -15,7 +15,7 @@ module WebSocket
   , isBinary
   ) where
 
-import Prelude ((*>), Unit, class Applicative, (<<<), pure, unit, ($), class Semigroup, class Monoid, mempty, (>>=), class Bind)
+import Prelude
 import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Maybe (Maybe)
 import Data.Either (Either (..))
@@ -24,12 +24,14 @@ import Data.Profunctor (class Profunctor)
 import Data.Generic.Rep (class Generic)
 import Data.ArrayBuffer.Types (ArrayBuffer)
 import Data.Symbol (SProxy (..), reflectSymbol, class IsSymbol)
+import Queue.One (new,on,put,del) as Q
 import Web.File.Blob (Blob)
 import Foreign (Foreign)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, runEffectFn1, mkEffectFn1, mkEffectFn2)
 import Effect.Exception (Error, throw)
 import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Aff (Aff, runAff_, makeAff, nonCanceler, effectCanceler)
 import Type.Proxy (Proxy (..))
 
 
@@ -170,18 +172,18 @@ newWebSocket :: forall send receive
              => EncodeJson send
              => String -- ^ Url
              -> Array String -- ^ Protocols
-             -> WebSocketsApp Effect receive send
-             -> Effect Unit
+             -> WebSocketsApp Aff receive send
+             -> Aff Unit
 newWebSocket url protocols app = newWebSocketString url protocols $ dimapStringify $ dimapJson app
 
 
 -- | Creates a new websocket, where the send and receive types are monomorphically typed as a String.
 newWebSocketString :: String -- ^ Url
                    -> Array String -- ^ Protocols
-                   -> WebSocketsApp Effect String String
-                   -> Effect Unit
+                   -> WebSocketsApp Aff String String
+                   -> Aff Unit
 newWebSocketString url protocols app =
-  newWebSocketBoth url protocols app (mempty :: WebSocketsApp Effect ArrayBuffer ArrayBuffer)
+  newWebSocketBoth url protocols app (mempty :: WebSocketsApp Aff ArrayBuffer ArrayBuffer)
 
 
 -- | Creates a new websocket, where the send and receive types are expected to be binary-compatible over
@@ -193,8 +195,8 @@ newWebSocketBinary :: forall send receive binaryType
              => IsSymbol binaryType
              => String -- ^ Url
              -> Array String -- ^ Protocols
-             -> WebSocketsApp Effect receive send
-             -> Effect Unit
+             -> WebSocketsApp Aff receive send
+             -> Aff Unit
 newWebSocketBinary url protocols app =
   newWebSocketBoth url protocols mempty app
 
@@ -209,32 +211,40 @@ newWebSocketBoth :: forall send receive binaryType
                  => IsSymbol binaryType
                  => String -- ^ Url
                  -> Array String -- ^ Protocols
-                 -> WebSocketsApp Effect String String
-                 -> WebSocketsApp Effect receive send
-                 -> Effect Unit
+                 -> WebSocketsApp Aff String String
+                 -> WebSocketsApp Aff receive send
+                 -> Aff Unit
 newWebSocketBoth url protocols (WebSocketsApp continue) (WebSocketsApp continueBinary) =
-  runEffectFn1 newWebSocketImpl
-    { url
-    , protocols
-    , binaryType: reflectSymbol (SProxy :: SProxy binaryType)
-    , continue: \env ->
-        let conts = continue env
-        in  { onclose: mkEffectFn1 $ \{code,reason,wasClean} -> conts.onclose
-                {code, reason: toMaybe reason, wasClean}
-            , onerror: mkEffectFn1 conts.onerror
-            , onmessage: mkEffectFn2 (conts.onmessage <<< runCapabilitiesImpl)
-            , onopen: mkEffectFn1 (conts.onopen <<< runCapabilitiesImpl)
-            }
-    , continueBinary: \env ->
-        let conts = continueBinary env
-        in  { onclose: mkEffectFn1 $ \{code,reason,wasClean} -> conts.onclose
-                {code, reason: toMaybe reason, wasClean}
-            , onerror: mkEffectFn1 conts.onerror
-            , onmessage: mkEffectFn2 (conts.onmessage <<< runCapabilitiesImpl)
-            , onopen: mkEffectFn1 (conts.onopen <<< runCapabilitiesImpl)
-            }
-    , isBinary: isBinary (Proxy :: Proxy receive)
-    }
+  makeAff \resolve -> do
+    done <- Q.new
+    let nullResolve _ = pure unit
+    runEffectFn1 newWebSocketImpl
+      { url
+      , protocols
+      , binaryType: reflectSymbol (SProxy :: SProxy binaryType)
+      , continue: \env ->
+          let conts = continue env
+          in  { onclose: mkEffectFn1 \{code,reason,wasClean} -> do
+                  runAff_ nullResolve $ conts.onclose {code, reason: toMaybe reason, wasClean}
+                  Q.del done
+              , onerror: mkEffectFn1 (runAff_ nullResolve <<< conts.onerror)
+              , onmessage: mkEffectFn2 \c x -> runAff_ nullResolve $ conts.onmessage (runCapabilitiesImpl c) x
+              , onopen: mkEffectFn1 \c -> do
+                  Q.on done \_ -> c.close
+                  runAff_ nullResolve $ conts.onopen $ runCapabilitiesImpl c
+              }
+      , continueBinary: \env ->
+          let conts = continueBinary env
+          in  { onclose: mkEffectFn1 \{code,reason,wasClean} -> runAff_ nullResolve $ conts.onclose
+                  {code, reason: toMaybe reason, wasClean}
+              , onerror: mkEffectFn1 (runAff_ nullResolve <<< conts.onerror)
+              , onmessage: mkEffectFn2 \c x -> runAff_ nullResolve $ conts.onmessage (runCapabilitiesImpl c) x
+              , onopen: mkEffectFn1 (runAff_ nullResolve <<< conts.onopen <<< runCapabilitiesImpl)
+              }
+      , isBinary: isBinary (Proxy :: Proxy receive)
+      }
+    resolve (Right unit)
+    pure (effectCanceler (Q.put done unit))
 
 
 
@@ -248,12 +258,24 @@ type CapabilitiesImpl send =
   }
 
 
-runCapabilitiesImpl :: forall send. CapabilitiesImpl send -> Capabilities Effect send
+runCapabilitiesImpl :: forall send. CapabilitiesImpl send -> Capabilities Aff send
 runCapabilitiesImpl cs =
-  { send: runEffectFn1 cs.send
-  , close: cs.close
-  , close': \{code,reason} -> runEffectFn1 cs.close' {code: toNullable code, reason: toNullable reason}
-  , getBufferedAmount: cs.getBufferedAmount
+  { send: \x -> makeAff \resolve -> do
+      runEffectFn1 cs.send x
+      resolve (Right unit)
+      pure nonCanceler
+  , close: makeAff \resolve -> do
+      cs.close
+      resolve (Right unit)
+      pure nonCanceler
+  , close': \{code,reason} -> makeAff \resolve -> do
+      runEffectFn1 cs.close' {code: toNullable code, reason: toNullable reason}
+      resolve (Right unit)
+      pure nonCanceler
+  , getBufferedAmount: makeAff \resolve -> do
+      a <- cs.getBufferedAmount
+      resolve (Right a)
+      pure nonCanceler
   }
 
 

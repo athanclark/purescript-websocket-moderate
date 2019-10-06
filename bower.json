@@ -16,7 +16,8 @@
     "purescript-foreign": "^5.0.0",
     "purescript-web-file": "^2.2.0",
     "purescript-arraybuffer": "v10.0.1",
-    "purescript-text-encoding": "^0.0.9"
+    "purescript-text-encoding": "^0.0.9",
+    "purescript-queue": "^8.0.1"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
