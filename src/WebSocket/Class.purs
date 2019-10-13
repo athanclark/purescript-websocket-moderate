@@ -9,14 +9,14 @@ import WebSocket
 import Data.Argonaut (class EncodeJson, class DecodeJson)
 import Data.Functor.Singleton (class SingletonFunctor, liftBaseWith_)
 import Data.Symbol (class IsSymbol)
-import Effect.Aff (Aff)
+import Effect (Effect)
 import Control.Monad.Trans.Control (class MonadBaseControl)
 
 
 newWebSocket :: forall m stM send receive
               . EncodeJson send
              => DecodeJson receive
-             => MonadBaseControl Aff m stM
+             => MonadBaseControl Effect m stM
              => SingletonFunctor stM
              => String -- ^ Url
              -> Array String -- ^ Protocols
@@ -29,7 +29,7 @@ newWebSocket url protocols app = do
 
 
 newWebSocketString :: forall m stM
-                    . MonadBaseControl Aff m stM
+                    . MonadBaseControl Effect m stM
                    => SingletonFunctor stM
                    => String -- ^ Url
                    -> Array String -- ^ Protocols
@@ -46,7 +46,7 @@ newWebSocketBinary :: forall m stM send receive binaryType
                    => WS.WebSocketBinary receive
                    => WS.BinaryType receive binaryType
                    => IsSymbol binaryType
-                   => MonadBaseControl Aff m stM
+                   => MonadBaseControl Effect m stM
                    => SingletonFunctor stM
                    => String -- ^ Url
                    -> Array String -- ^ Protocols
@@ -63,7 +63,7 @@ newWebSocketBoth :: forall m stM send receive binaryType
                  => WS.WebSocketBinary receive
                  => WS.BinaryType receive binaryType
                  => IsSymbol binaryType
-                 => MonadBaseControl Aff m stM
+                 => MonadBaseControl Effect m stM
                  => SingletonFunctor stM
                  => String -- ^ Url
                  -> Array String -- ^ Protocols
@@ -77,9 +77,9 @@ newWebSocketBoth url protocols app appBinary = do
 
 
 getApp :: forall m stM send receive
-        . MonadBaseControl Aff m stM
+        . MonadBaseControl Effect m stM
        => SingletonFunctor stM
-       => WebSocketsApp m receive send -> m (WebSocketsApp Aff receive send)
+       => WebSocketsApp m receive send -> m (WebSocketsApp Effect receive send)
 getApp (WebSocketsApp continue) = liftBaseWith_ \runInBase -> pure $ WebSocketsApp \env ->
   let conts = continue env
   in  { onclose:   \cs   -> runInBase (conts.onclose cs)
@@ -90,9 +90,9 @@ getApp (WebSocketsApp continue) = liftBaseWith_ \runInBase -> pure $ WebSocketsA
 
 
 runCapabilities :: forall q m stM
-                 . MonadBaseControl Aff m stM
+                 . MonadBaseControl Effect m stM
                 => SingletonFunctor stM
-                => Capabilities Aff q -> Capabilities m q
+                => Capabilities Effect q -> Capabilities m q
 runCapabilities {close,close',send,getBufferedAmount} =
   { close:             liftBaseWith_ \_ -> close
   , close':            \cs -> liftBaseWith_ \_ -> close' cs
