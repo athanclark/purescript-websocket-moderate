@@ -31,7 +31,7 @@ import Effect (Effect)
 import Effect.Uncurried (EffectFn1, EffectFn2, runEffectFn1, mkEffectFn1, mkEffectFn2)
 import Effect.Exception (Error, throw)
 import Effect.Class (class MonadEffect, liftEffect)
-import Effect.Aff (Aff, runAff_, makeAff, nonCanceler, effectCanceler)
+import Effect.Aff (Aff, runAff_, makeAff, effectCanceler)
 import Type.Proxy (Proxy (..))
 
 
@@ -260,22 +260,10 @@ type CapabilitiesImpl send =
 
 runCapabilitiesImpl :: forall send. CapabilitiesImpl send -> Capabilities Aff send
 runCapabilitiesImpl cs =
-  { send: \x -> makeAff \resolve -> do
-      runEffectFn1 cs.send x
-      resolve (Right unit)
-      pure nonCanceler
-  , close: makeAff \resolve -> do
-      cs.close
-      resolve (Right unit)
-      pure nonCanceler
-  , close': \{code,reason} -> makeAff \resolve -> do
-      runEffectFn1 cs.close' {code: toNullable code, reason: toNullable reason}
-      resolve (Right unit)
-      pure nonCanceler
-  , getBufferedAmount: makeAff \resolve -> do
-      a <- cs.getBufferedAmount
-      resolve (Right a)
-      pure nonCanceler
+  { send: \x -> liftEffect (runEffectFn1 cs.send x)
+  , close: liftEffect cs.close
+  , close': \{code,reason} -> liftEffect (runEffectFn1 cs.close' {code: toNullable code, reason: toNullable reason})
+  , getBufferedAmount: liftEffect cs.getBufferedAmount
   }
 
 
