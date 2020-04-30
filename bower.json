@@ -7,7 +7,6 @@
     "output"
   ],
   "dependencies": {
-    "purescript-prelude": "^4.1.1",
     "purescript-nullable": "^4.1.1",
     "purescript-exceptions": "^4.0.0",
     "purescript-monad-control": "^5.0.0",
@@ -16,7 +15,7 @@
     "purescript-foreign": "^5.0.0",
     "purescript-web-file": "^2.2.0",
     "purescript-arraybuffer": "^10.0.2",
-    "purescript-text-encoding": "^0.0.9"
+    "purescript-text-encoding": "^1.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"

@@ -3,7 +3,7 @@ module Test.Main where
 import Prelude
 import Effect (Effect)
 import Effect.Class (liftEffect)
-import Effect.Console (log, error, errorShow)
+import Effect.Console (log)
 import Effect.Exception (throwException)
 import WebSocket (newWebSocket, WebSocketsApp (..))
 import WebSocket.Class as WSC

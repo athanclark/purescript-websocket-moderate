@@ -11,8 +11,8 @@ import Data.Either (Either (..))
 import Data.Profunctor (dimap)
 import Data.ArrayBuffer.Typed as TA
 import Data.ArrayBuffer.Types (ArrayBuffer, Uint8Array)
-import Data.TextDecoder as TD
-import Data.TextEncoder as TE
+import Data.TextDecoding as TD
+import Data.TextEncoding as TE
 import Effect.Unsafe (unsafePerformEffect)
 import Effect.Exception (throwException)
 

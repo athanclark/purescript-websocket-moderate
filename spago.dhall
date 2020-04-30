@@ -9,6 +9,7 @@ You can edit this file as you like.
   , "exceptions"
   , "monad-control"
   , "nullable"
+  , "text-encoding"
   , "web-file"
   ]
 , packages = ./packages.dhall
