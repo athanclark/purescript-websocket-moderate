@@ -15,22 +15,22 @@ module WebSocket
   , isBinary
   ) where
 
-import Prelude ((*>), Unit, class Applicative, (<<<), pure, unit, ($), class Semigroup, class Monoid, mempty, (>>=), class Bind)
-import Data.Nullable (Nullable, toMaybe, toNullable)
-import Data.Maybe (Maybe)
-import Data.Either (Either (..))
-import Data.Argonaut (class EncodeJson, class DecodeJson, encodeJson, decodeJson, jsonParser, stringify, Json)
-import Data.Profunctor (class Profunctor)
-import Data.Generic.Rep (class Generic)
+import Data.Argonaut (class DecodeJson, class EncodeJson, Json, decodeJson, encodeJson, jsonParser, printJsonDecodeError, stringify)
 import Data.ArrayBuffer.Types (ArrayBuffer)
-import Data.Symbol (SProxy (..), reflectSymbol, class IsSymbol)
-import Web.File.Blob (Blob)
-import Foreign (Foreign)
+import Data.Either (Either(..))
+import Data.Generic.Rep (class Generic)
+import Data.Maybe (Maybe)
+import Data.Nullable (Nullable, toMaybe, toNullable)
+import Data.Profunctor (class Profunctor)
+import Data.Symbol (SProxy(..), reflectSymbol, class IsSymbol)
 import Effect (Effect)
-import Effect.Uncurried (EffectFn1, EffectFn2, runEffectFn1, mkEffectFn1, mkEffectFn2)
-import Effect.Exception (Error, throw)
 import Effect.Class (class MonadEffect, liftEffect)
-import Type.Proxy (Proxy (..))
+import Effect.Exception (Error, throw)
+import Effect.Uncurried (EffectFn1, EffectFn2, runEffectFn1, mkEffectFn1, mkEffectFn2)
+import Foreign (Foreign)
+import Prelude ((*>), Unit, class Applicative, (<<<), pure, unit, ($), class Semigroup, class Monoid, mempty, (>>=), class Bind)
+import Type.Proxy (Proxy(..))
+import Web.File.Blob (Blob)
 
 
 
@@ -146,7 +146,7 @@ dimapJson = dimap' fromJson encodeJson
     fromJson :: Json -> m receive
     fromJson x = case decodeJson x of
       Right y -> pure y
-      Left e -> liftEffect (throw e)
+      Left e -> liftEffect (throw (printJsonDecodeError e))
 
 
 
