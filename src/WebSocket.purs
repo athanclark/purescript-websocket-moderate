@@ -15,6 +15,7 @@ module WebSocket
   , isBinary
   ) where
 
+import Prelude ((*>), Unit, class Applicative, (<<<), pure, unit, ($), class Semigroup, class Monoid, mempty, (>>=), class Bind)
 import Data.Argonaut (class DecodeJson, class EncodeJson, Json, decodeJson, encodeJson, jsonParser, printJsonDecodeError, stringify)
 import Data.ArrayBuffer.Types (ArrayBuffer)
 import Data.Either (Either(..))
@@ -28,7 +29,6 @@ import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (Error, throw)
 import Effect.Uncurried (EffectFn1, EffectFn2, runEffectFn1, mkEffectFn1, mkEffectFn2)
 import Foreign (Foreign)
-import Prelude ((*>), Unit, class Applicative, (<<<), pure, unit, ($), class Semigroup, class Monoid, mempty, (>>=), class Bind)
 import Type.Proxy (Proxy(..))
 import Web.File.Blob (Blob)
 
