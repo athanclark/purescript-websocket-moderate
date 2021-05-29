@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/athanclark/purescript-websocket-moderate#readme",
   "dependencies": {
-    "ws": "^6.1.2"
+    "ws": "^7.4.6"
   }
 }
