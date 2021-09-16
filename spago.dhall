@@ -11,6 +11,13 @@ You can edit this file as you like.
   , "nullable"
   , "text-encoding"
   , "web-file"
+  , "arraybuffer-types"
+  , "effect"
+  , "either"
+  , "foreign"
+  , "maybe"
+  , "prelude"
+  , "profunctor"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs" ]

@@ -2,5 +2,5 @@ let conf = ./spago.dhall
 
 in conf // {
   sources = conf.sources # [ "test/**/*.purs" ],
-  dependencies = conf.dependencies # [ "psci-support" ]
+  dependencies = conf.dependencies # [ "console" ]
 }
